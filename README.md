@@ -14,15 +14,19 @@
 	Location updating request/accept
 	identity request/response	
 	authentication request/response
+    IMSI detach indication 
 		
 ### GMM: gsm_a.dtap.msg_gmm_type
 	attach/detach request
 	authentication and ciphering req/resp
+    attach complete
+    attach accept
 
 
 /**Specific values of the subfields that I will look for more details **/
 
-### MM -> Authentication request
+### MM 
+##### Authentication request
 	Check the values of -> Authentication Parameter RAND - UMTS challenge or GSM challenge
 					=> RAND value: if it has at all a hash value or is empty or even a value that looks strange.
 			     -> Authentication Parameter AUTN (UMTS and EPS authentication challenge)
@@ -38,4 +42,4 @@
    
    -> Identity request 
    	Check the value of -> Identity type, IMSI or T-MSI (probably here is asking only for imsi but need to be double check).
-   	Check the next Identity request for IMEI
+   	Check the next Identity request for IMEI no need ?
