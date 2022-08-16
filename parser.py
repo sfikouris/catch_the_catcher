@@ -10,10 +10,8 @@ cap_mm = pyshark.FileCapture('gsm_multiple_attach_detach_request.pcapng', displa
 
 # print(dir(cap_mm[0]))
 
-print(dir(cap_mm[0]['gsm_a.dtap']))
-print(cap_mm[0]['gsm_a.dtap'].gsm_a_tmsi)
+#print(dir(cap_mm[0]['gsm_a.dtap']))
+#print(cap_mm[0]['gsm_a.dtap'].gsm_a_tmsi)
 
 for packet in cap_mm:
-   #test_module.handle_gsm_mm_packet(packet["gsm_a.dtap"])
-   #print(packet._all_fields)
-   break
+   test_module.handle_gsm_mm_packet(packet["gsm_a.dtap"])
