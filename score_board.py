@@ -14,6 +14,7 @@ class score_board(FrozenClass):
     def __init__(self) -> None:
         self.__imsi_detach_indication = 0
         self.__location_update_request = 0
+        self.__authentication_request = 0
         self._freeze() # no new attributes after this point.
 
     def set_imsi_detach_indication(self, imsi_detach_indication):
@@ -28,18 +29,25 @@ class score_board(FrozenClass):
     def get_location_update_request(self):
         return self.__location_update_request
 
+    def set_authentication_request(self, authentication_request):
+        self.__authentication_request = authentication_request
+    
+    def get_authentication_request(self):
+        return self.__authentication_request
     def overall_score(self):
-        return self.__imsi_detach_indication + self.__location_update_request
+        return (self.__imsi_detach_indication + self.__location_update_request
+                + self.__authentication_request)
+
 
 class GSM_MSG_MM_TYPE(enum.Enum):
-    IMSI_Detach_Indication = "0x00000001"
-    Identify_Request = "0x00000018"
-    Identify_Response = "0x00000019"
-    Location_Updating_Request = "0x00000008"
-    Location_Updating_Accept = "0x00000002"
-    Authentication_Request = "0x00000012"
-    Authentication_Response = "0x00000014"
-    MM_Information = "0x00000032"
+    IMSI_Detach_Indication = "0x1"
+    Identify_Request = "0x18"
+    Identify_Response = "0x19"
+    Location_Updating_Request = "0x8"
+    Location_Updating_Accept = "0x2"
+    Authentication_Request = "0x12"
+    Authentication_Response = "0x14"
+    MM_Information = "0x32"
 
 class SCORE_BOARD(enum.Enum):
     Points_IMSI_Detach_Indication_TMSI = 10
