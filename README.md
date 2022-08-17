@@ -6,8 +6,10 @@
  Protocol to follow -> gsm_a.dtap
  expand this protocol I follow packets with GPRS mobility management messages and mobility managment messages.
  
- ###todo### -> I will work also with the SIPs for neighbors and etc, but later. 
- ###todo### -> Check radio resources management messages for the channel release case, to be Normal event (?) 
+ ### todo
+ 	-> I will work also with the SIPs for neighbors and etc, but later. 
+ 	-> Check radio resources management messages for the channel release case, to be Normal event (?) 
+ 	-> Track a legitment attachment and right down the messages that are excgange. Then find a way to check if at every new attachment those steps are similar. 
 /**General info about the subfield of the protocol that I will collect and analyze**/
 
 ### MM: gsm_a.dtap.msg_mm_type 
