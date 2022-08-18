@@ -1,4 +1,5 @@
 import enum
+from telnetlib import AUTHENTICATION
 
 class FrozenClass(object):
     __isfrozen = False
@@ -38,16 +39,26 @@ class score_board(FrozenClass):
         return (self.__imsi_detach_indication + self.__location_update_request
                 + self.__authentication_request)
 
-
+#change to all capital
 class GSM_MSG_MM_TYPE(enum.Enum):
     IMSI_Detach_Indication = "0x1"
-    Identify_Request = "0x18"
-    Identify_Response = "0x19"
-    Location_Updating_Request = "0x8"
     Location_Updating_Accept = "0x2"
+    Location_Updating_Request = "0x8"
     Authentication_Request = "0x12"
     Authentication_Response = "0x14"
+    Identify_Request = "0x18"
+    Identify_Response = "0x19"
     MM_Information = "0x32"
+
+class GSM_MSG_GMM_TYPE(enum.Enum):
+    ATTACH_REQUEST = "0x1"
+    ATTACH_ACCEPT = "0x2"
+    ATTACH_COMPLETE = "0x3"
+    DETACH_REQUEST = "0x5"
+    AUTHENTICATION_AND_CIPHERING_REQUEST = "0x12"
+    AUTHENTICATION_AND_CIPHERING_RESPONSE = "0x13"
+    GMM_INFROMATION = "0x21"
+
 
 class SCORE_BOARD(enum.Enum):
     Points_IMSI_Detach_Indication_TMSI = 10
