@@ -16,6 +16,7 @@ class score_board(FrozenClass):
         self.__imsi_detach_indication = 0
         self.__location_update_request = 0
         self.__authentication_request = 0
+        self.__pattern_points = 0
         self._freeze() # no new attributes after this point.
 
     def set_imsi_detach_indication(self, imsi_detach_indication):
@@ -35,9 +36,47 @@ class score_board(FrozenClass):
     
     def get_authentication_request(self):
         return self.__authentication_request
-    def overall_score(self):
+
+    def set_pattern_points(self, pattern_points):
+        self.__pattern_points = pattern_points;
+
+    def get_pattern_points(self):
+        return self.__pattern_points
+
+    def get_overall_score(self):
         return (self.__imsi_detach_indication + self.__location_update_request
-                + self.__authentication_request)
+                + self.__authentication_request + self.__pattern_points)
+
+    def clear_points(self):
+        self.__authentication_request = 0
+        self.__imsi_detach_indication = 0
+        self.__location_update_request = 0
+        self.__pattern_points = 0
+
+class pattern_check(FrozenClass):
+    __checker = 0
+    __bit_mask = 31
+    def __init__(self) -> None:
+        self._freeze
+    
+    def set_checker(self, bit_index):
+        pattern_check.__checker |= (1 << bit_index)
+
+    def clear_bit(bit_index):
+        pattern_check.__checker &= ~(1 << bit_index)
+
+    def clear_checker(self):
+        pattern_check.__checker = 0
+
+    def get_checker(self):
+        return pattern_check.__checker
+
+    def check_bits(self):
+        tmp = pattern_check.__checker & pattern_check.__bit_mask
+        if(tmp == pattern_check.__bit_mask):
+            return True
+        else:
+            return False
 
 #change to all capital
 class GSM_MSG_MM_TYPE(enum.Enum):
@@ -69,3 +108,4 @@ class SCORE_BOARD(enum.Enum):
     Points_Location_Updating_Request_TIMSI = 10 
     Points_Authentication_Request = 10
     Points_Authentication_Request_not_asking = -10 #check if it's asking (imsi catcher)
+    Points_GSM_Pattern = 50
