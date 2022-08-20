@@ -54,13 +54,19 @@ def handle_gsm_mm_packet(packet):
         checker = gsm_attachment_procedure_bits.get_checker()
         if(checker == 0):
             gsm_attachment_procedure_bits.set_checker(0)
+            score.set_location_update_request()
         else:
             current_point = score.get_overall_score()
             retrun_flag = not gsm_attachment_procedure_bits.check_bits()
             gsm_attachment_procedure_bits.clear_checker()
             score.clear_points()
             gsm_attachment_procedure_bits.set_checker(0)
+            score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_TIMSI)
+            print("MAX RETURN POINTS : ", current_point)
+            #no need to return pattern bits because at attachment complete I will do it.
             if(retrun_flag):
+                #return if pattern bits are not full.
+                print("RETURN POINTS : ", current_point)
                 return current_point
 
 
@@ -75,6 +81,7 @@ def handle_gsm_mm_packet(packet):
         if(hasattr(packet, 'gsm_a_tmsi')):
             print("\t TMSI :", packet.gsm_a_tmsi)
         gsm_attachment_procedure_bits.set_checker(2)
+        score.set_authentication_request(header_file.SCORE_BOARD.Points_Authentication_Request.value)
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Authentication_Response.value:
         print("Authentication Response received")

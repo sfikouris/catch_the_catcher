@@ -12,46 +12,46 @@ class FrozenClass(object):
         self.__isfrozen = True
 
 class score_board(FrozenClass):
+    __imsi_detach_indication = 0
+    __location_update_request = 0
+    __authentication_request = 0
+    __pattern_points = 0
     def __init__(self) -> None:
-        self.__imsi_detach_indication = 0
-        self.__location_update_request = 0
-        self.__authentication_request = 0
-        self.__pattern_points = 0
         self._freeze() # no new attributes after this point.
 
     def set_imsi_detach_indication(self, imsi_detach_indication):
-        self.__imsi_detach_indication = imsi_detach_indication
+        score_board.__imsi_detach_indication = imsi_detach_indication
     
     def get_imsi_detach_indication(self):
-        return self.__imsi_detach_indication
+        return score_board.__imsi_detach_indication
     
     def set_location_update_request(self, location_update_request):
-        self.__location_update_request = location_update_request
+        score_board.__location_update_request = location_update_request
     
     def get_location_update_request(self):
-        return self.__location_update_request
+        return score_board.__location_update_request
 
     def set_authentication_request(self, authentication_request):
-        self.__authentication_request = authentication_request
+        score_board.__authentication_request = authentication_request
     
     def get_authentication_request(self):
-        return self.__authentication_request
+        return score_board.__authentication_request
 
     def set_pattern_points(self, pattern_points):
-        self.__pattern_points = pattern_points;
+        score_board.__pattern_points = pattern_points
 
     def get_pattern_points(self):
-        return self.__pattern_points
+        return score_board.__pattern_points
 
     def get_overall_score(self):
-        return (self.__imsi_detach_indication + self.__location_update_request
-                + self.__authentication_request + self.__pattern_points)
+        return (score_board.__imsi_detach_indication + score_board.__location_update_request
+                + score_board.__authentication_request + score_board.__pattern_points)
 
     def clear_points(self):
-        self.__authentication_request = 0
-        self.__imsi_detach_indication = 0
-        self.__location_update_request = 0
-        self.__pattern_points = 0
+        score_board.__authentication_request = 0
+        score_board.__imsi_detach_indication = 0
+        score_board.__location_update_request = 0
+        score_board.__pattern_points = 0
 
 class pattern_check(FrozenClass):
     __checker = 0
@@ -98,8 +98,7 @@ class GSM_MSG_GMM_TYPE(enum.Enum):
     AUTHENTICATION_AND_CIPHERING_RESPONSE = "0x13"
     GMM_INFROMATION = "0x21"
 
-
-class SCORE_BOARD(enum.Enum):
+class SCORE_BOARD(enum.IntEnum):
     Points_IMSI_Detach_Indication_TMSI = 10
     Points_IMSI_Detach_Indication_IMSI = -10
     Points_Identify_Request_IMSI = -5 #probably this is invalid. Identify req is always imsi.
