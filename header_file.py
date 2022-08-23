@@ -15,7 +15,11 @@ class score_board(FrozenClass):
     __imsi_detach_indication = 0
     __location_update_request = 0
     __authentication_request = 0
+    __location_accept = 0
     __pattern_points = 0
+    __attach_accept = 0
+    __attach_complete = 0
+    __auth_and_cipher = 0
     def __init__(self) -> None:
         self._freeze() # no new attributes after this point.
 
@@ -31,11 +35,35 @@ class score_board(FrozenClass):
     def get_location_update_request(self):
         return score_board.__location_update_request
 
+    def set_location_accept(self, location_accept):
+        score_board.__location_accept = location_accept
+    
+    def get_location_accept(self):
+        return score_board.__location_accept
+
     def set_authentication_request(self, authentication_request):
         score_board.__authentication_request = authentication_request
     
     def get_authentication_request(self):
         return score_board.__authentication_request
+
+    def set_attach_accept(self, attach_accept):
+        score_board.__attach_accept = attach_accept
+    
+    def get_attach_accept(self):
+        return score_board.__attach_accept
+
+    def set_attach_complete(self, attach_complete):
+        score_board.__attach_complete = attach_complete
+    
+    def get_attach_complete(self):
+        return score_board.__attach_complete
+
+    def set_auth_and_cipher(sefl, auth_and_cipher):
+        score_board.__auth_and_cipher = auth_and_cipher
+    
+    def get_auth_and_cipher(self):
+        return score_board.__auth_and_cipher
 
     def set_pattern_points(self, pattern_points):
         score_board.__pattern_points = pattern_points
@@ -44,14 +72,19 @@ class score_board(FrozenClass):
         return score_board.__pattern_points
 
     def get_overall_score(self):
-        return (score_board.__imsi_detach_indication + score_board.__location_update_request
-                + score_board.__authentication_request + score_board.__pattern_points)
+        return (score_board.__imsi_detach_indication + score_board.__location_update_request + score_board.__authentication_request 
+                + score_board.__pattern_points + score_board.__location_accept + score_board.__attach_accept + score_board.__attach_complete
+                + score_board.__auth_and_cipher)
 
     def clear_points(self):
         score_board.__authentication_request = 0
         score_board.__imsi_detach_indication = 0
         score_board.__location_update_request = 0
         score_board.__pattern_points = 0
+        score_board.__location_accept = 0
+        score_board.__attach_accept = 0
+        score_board.__attach_complete = 0
+        score_board.__auth_and_cipher = 0
 
 class pattern_check(FrozenClass):
     __checker = 0
@@ -82,6 +115,7 @@ class pattern_check(FrozenClass):
 class GSM_MSG_MM_TYPE(enum.Enum):
     IMSI_Detach_Indication = "0x1"
     Location_Updating_Accept = "0x2"
+    Location_Updating_Reject = "0x4"
     Location_Updating_Request = "0x8"
     Authentication_Request = "0x12"
     Authentication_Response = "0x14"
@@ -104,7 +138,13 @@ class SCORE_BOARD(enum.IntEnum):
     Points_Identify_Request_IMSI = -5 #probably this is invalid. Identify req is always imsi.
     Points_Identify_Request_TIMSI = 5 #probably this is invalid. Identify req is always imsi.
     Points_Location_Updating_Request_IMSI = -10
-    Points_Location_Updating_Request_TIMSI = 10 
+    Points_Location_Updating_Request_TMSI = 10 
+    Points_Location_Reject = -10 
+    Points_Location_Accept = 10
     Points_Authentication_Request = 10
     Points_Authentication_Request_not_asking = -10 #check if it's asking (imsi catcher)
+    Points_Attach_Complete = 10
+    Points_Attach_Accept = 10
     Points_GSM_Pattern = 50
+    Points_Authentication_And_Ciphering_Request = 10
+    Legit_Operator = 110

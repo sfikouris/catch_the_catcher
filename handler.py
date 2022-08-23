@@ -1,6 +1,9 @@
 
 import header_file
+import logging
+import sys
 
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 '''
 Create a bitmask in each if else. eg 00000
 imsi detach arrive 10000
@@ -30,118 +33,124 @@ def handle_gsm_mm_packet(packet):
         hex_value_gmm = hex(int_value_gmm)
 
     if hex_value_mm == header_file.GSM_MSG_MM_TYPE.IMSI_Detach_Indication.value:
-        print("IMSI Detach Indication received")
+        logging.debug("IMSI Detach Indication received")
+        score.clear_points()
+        gsm_attachment_procedure_bits.clear_checker()
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Identify_Request.value:
-        print("Identify Request received")
-        if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+        logging.debug("Identify Request received")
         gsm_attachment_procedure_bits.set_checker(1)
         #probably need to check about IMSI and IMEI separate 
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Identify_Response.value:
-        print("Identify Response received")
+        logging.debug("Identify Response received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
+        elif(hasattr(packet, 'e212_imsi')):
+            logging.debug("\t IMSI Available : %s", packet.e212_imsi) #check if field imsi is correct
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Location_Updating_Request.value:
-        print("Location Updating Request received")
-        if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
-    
+        logging.debug("Location Updating Request received")
+
+        retrun_flag = False
         checker = gsm_attachment_procedure_bits.get_checker()
         if(checker == 0):
             gsm_attachment_procedure_bits.set_checker(0)
-            score.set_location_update_request()
         else:
             current_point = score.get_overall_score()
             retrun_flag = not gsm_attachment_procedure_bits.check_bits()
             gsm_attachment_procedure_bits.clear_checker()
             score.clear_points()
             gsm_attachment_procedure_bits.set_checker(0)
-            score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_TIMSI)
-            print("MAX RETURN POINTS : ", current_point)
+            logging.debug("MAX RETURN POINTS : %d", current_point)
             #no need to return pattern bits because at attachment complete I will do it.
-            if(retrun_flag):
-                #return if pattern bits are not full.
-                print("RETURN POINTS : ", current_point)
-                return current_point
+        if(hasattr(packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI Available : %s", packet.gsm_a_tmsi)
+            score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_TMSI)
+        elif(hasattr(packet, 'e212_imsi')):
+            logging.debug("\t IMSI Available : %s", packet.e212_imsi) #check if field imsi is correct
+            score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_IMSI)
 
-
+        if(retrun_flag):
+            #return if pattern bits are not full.
+            logging.debug("RETURN POINTS : %d", current_point)
+            return current_point
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Location_Updating_Accept.value:
-        print("Location Updating Accept received")        
+        logging.debug("Location Updating Accept received")        
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
+        score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Accept.value)
+
+    elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Location_Updating_Reject.value:
+        logging.debug("Location Updating Reject")
+        score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
+        return score.get_overall_score()
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Authentication_Request.value:
-        print("Authentication Request received")    
+        logging.debug("Authentication Request received")    
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
         gsm_attachment_procedure_bits.set_checker(2)
         score.set_authentication_request(header_file.SCORE_BOARD.Points_Authentication_Request.value)
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.Authentication_Response.value:
-        print("Authentication Response received")
+        logging.debug("Authentication Response received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
 
     elif hex_value_mm == header_file.GSM_MSG_MM_TYPE.MM_Information.value:
-        print("MM_Information received")
+        logging.debug("MM_Information received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.ATTACH_REQUEST.value:
-        print("Attach_Request received")
+        logging.debug("Attach_Request received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)   
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)   
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.ATTACH_COMPLETE.value:
-        print("Attach_Complete received")
-        if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)   
+        logging.debug("Attach_Complete received")
+        score.set_attach_complete(header_file.SCORE_BOARD.Points_Attach_Complete.value)        
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.ATTACH_ACCEPT.value:
-        print("Attach_Accept received")
+        logging.debug("Attach_Accept received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)   
-        gsm_attachment_procedure_bits.set_checker(4)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)   
+            gsm_attachment_procedure_bits.set_checker(4)
+            score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
+            if gsm_attachment_procedure_bits.check_bits():
+                score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
+            return score.get_overall_score()       
+
         #if completed then foul score.
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.DETACH_REQUEST.value:
-        print("Detach_Request received")
+        logging.debug("Detach_Request received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)   
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)   
+            score.clear_points()
+            gsm_attachment_procedure_bits.clear_checker()
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.AUTHENTICATION_AND_CIPHERING_RESPONSE.value:
-        print("Authentication_And_Ciphering_Response received")
-        if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)   
+        logging.debug("Authentication_And_Ciphering_Response received")
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.AUTHENTICATION_AND_CIPHERING_REQUEST.value:
-        print("Authentication_And_Ciphering_Request received")
-        if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+        logging.debug("Authentication_And_Ciphering_Request received")
+        score.set_auth_and_cipher(header_file.SCORE_BOARD.Points_Authentication_And_Ciphering_Request.value)
         gsm_attachment_procedure_bits.set_checker(3)  
 
     elif hex_value_gmm == header_file.GSM_MSG_GMM_TYPE.GMM_INFROMATION.value:
-        print("GMM_Information received")
+        logging.debug("GMM_Information received")
         if(hasattr(packet, 'gsm_a_tmsi')):
-            print("\t TMSI :", packet.gsm_a_tmsi)
+            logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
     #On an IMSI CATCHER a release msg should be send. There I must check the bit_checker to see if it kick me out before the completment of the attachment.
     else:
         if(hasattr(packet, 'msg_mm_type')):
-            print("Unknown mm type ", packet.msg_mm_type)
+            logging.debug("Unknown mm type %s", packet.msg_mm_type)
         elif hasattr(packet, 'msg_gmm_type'):
-            print("Unknown gmm type ", packet.msg_gmm_type)
+            logging.debug("Unknown gmm type %s", packet.msg_gmm_type)
         else:
-            print("Unknown msg type")
-
-
-score = header_file.score_board()
-score.set_imsi_detach_indication(10)
-score.set_location_update_request(20)
-score.set_authentication_request(30)
-print(score.get_overall_score())
+            logging.debug("Unknown msg type")
