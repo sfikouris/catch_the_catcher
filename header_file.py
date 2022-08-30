@@ -1,3 +1,4 @@
+from cmath import nan
 import enum
 from telnetlib import AUTHENTICATION
 
@@ -111,6 +112,36 @@ class pattern_check(FrozenClass):
         else:
             return False
 
+class general_info(FrozenClass):
+    __sip3_last_seen = nan
+    __cell_identity = nan
+    __location_update_request_last_seen = False
+    def __init__(self) -> None:
+        self._freeze
+    
+    def set_sip3_last_seen(self, sip3_packet_num):
+        general_info.__sip3_last_seen = sip3_packet_num
+    
+    def get_sip3_last_seen(self):
+        return general_info.__sip3_last_seen
+    
+    def set_cell_identity(self, cell_id):
+        general_info.__cell_identity = cell_id
+    
+    def get_cell_identity(self):
+        return general_info.__cell_identity
+
+    def set_location_update_req_last_seen(self):
+        general_info.__location_update_request_last_seen = True
+    
+    def get_location_update_req_last_seen(self):
+        return general_info.__location_update_request_last_seen
+
+    def clear_vars(self):
+        general_info.__cell_identity = nan
+        general_info.__location_update_request_last_seen = False
+        general_info.__sip3_last_seen = nan
+
 #change to all capital
 class GSM_MSG_MM_TYPE(enum.Enum):
     IMSI_Detach_Indication = "0x1"
@@ -131,6 +162,27 @@ class GSM_MSG_GMM_TYPE(enum.Enum):
     AUTHENTICATION_AND_CIPHERING_REQUEST = "0x12"
     AUTHENTICATION_AND_CIPHERING_RESPONSE = "0x13"
     GMM_INFROMATION = "0x21"
+
+class GSM_MSG_RR_TYPE(enum.Enum):
+    System_Information_Type_13 = "0x0"
+    System_Information_Type_5ter = "0x6"
+    System_Information_Type_2quater = "0x7"
+    Channel_Release = "0xd"
+    Measurement_Report = "0x15"
+    Classmark_Change = "0x16"
+    System_Information_Type_1 = "0x19"
+    System_Information_Type_2 = "0x1a"
+    System_Information_Type_3 = "0x1b"
+    System_Information_Type_4 = "0x1c"
+    System_Information_Type_5 = "0x1d"
+    System_Information_Type_6 = "0x1e"
+    Paging_Request_Type_1 = "0x21"
+    Paging_Request_Type_2 = "0x22"
+    GPRS_Suspension_Request = "0x34"
+    Ciphering_Mode_Command = "0x35"
+    Immediate_Assignment = "0x3f"
+
+
 
 class SCORE_BOARD(enum.IntEnum):
     Points_IMSI_Detach_Indication_TMSI = 10
