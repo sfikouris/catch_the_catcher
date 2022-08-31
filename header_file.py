@@ -116,6 +116,9 @@ class general_info(FrozenClass):
     __sip3_last_seen = nan
     __cell_identity = nan
     __location_update_request_last_seen = False
+    __imsi = nan
+    __tmsi_mm = nan
+    __tmsi_gmm = nan
     def __init__(self) -> None:
         self._freeze
     
@@ -137,10 +140,31 @@ class general_info(FrozenClass):
     def get_location_update_req_last_seen(self):
         return general_info.__location_update_request_last_seen
 
+    def set_imsi(self, imsi):
+        general_info.__imsi = imsi
+    
+    def get_imsi(self):
+        return general_info.__imsi
+
+    def set_tmsi_mm(self, tmsi_mm):
+        general_info.__tmsi_mm = tmsi_mm
+
+    def get_tmsi_mm(self):
+        return general_info.__tmsi_mm
+
+    def set_tmsi_gmm(self, tmsi_gmm):
+        general_info.__tmsi_gmm = tmsi_gmm
+
+    def get_tmsi_gmm(self):
+        general_info.__tmsi_gmm
+
     def clear_vars(self):
         general_info.__cell_identity = nan
         general_info.__location_update_request_last_seen = False
         general_info.__sip3_last_seen = nan
+        general_info.__imsi = nan
+        general_info.__tmsi_gmm = nan
+        general_info.__tmsi_mm = nan
 
 #change to all capital
 class GSM_MSG_MM_TYPE(enum.Enum):
@@ -159,8 +183,12 @@ class GSM_MSG_GMM_TYPE(enum.Enum):
     ATTACH_ACCEPT = "0x2"
     ATTACH_COMPLETE = "0x3"
     DETACH_REQUEST = "0x5"
+    ROUTING_AREA_UPDATE_COMPLETE = "0xa"
+    ROUTING_AREA_UPDATE_ACCEPT = "0x9"
     AUTHENTICATION_AND_CIPHERING_REQUEST = "0x12"
     AUTHENTICATION_AND_CIPHERING_RESPONSE = "0x13"
+    IDENTITY_REQUEST = "0x15"
+    IDENTITY_RESPONSE = "0x16"
     GMM_INFROMATION = "0x21"
 
 class GSM_MSG_RR_TYPE(enum.Enum):
@@ -181,8 +209,6 @@ class GSM_MSG_RR_TYPE(enum.Enum):
     GPRS_Suspension_Request = "0x34"
     Ciphering_Mode_Command = "0x35"
     Immediate_Assignment = "0x3f"
-
-
 
 class SCORE_BOARD(enum.IntEnum):
     Points_IMSI_Detach_Indication_TMSI = 10

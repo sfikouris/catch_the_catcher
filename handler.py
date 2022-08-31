@@ -53,9 +53,11 @@ def handle_location_update_request(packet, score: header_file.score_board, gsm_a
     if(hasattr(packet, 'gsm_a_tmsi')):
         logging.debug("\t TMSI Available : %s", packet.gsm_a_tmsi)
         score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_TMSI.value)
+        general_info.__tmsi_mm = packet.gsm_a_tmsi
     elif(hasattr(packet, 'e212_imsi')):
         logging.debug("\t IMSI Available : %s", packet.e212_imsi) #check if field imsi is correct
         score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_IMSI.value)
+        general_info.__imsi = packet.e212_imsi
 
     if(retrun_flag):
         #return if pattern bits are not full.
@@ -64,6 +66,7 @@ def handle_location_update_request(packet, score: header_file.score_board, gsm_a
 
 def handle_location_update_accept(packet, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check,
                                     general_info: header_file.general_info):
+    #add and maybe return some points here.
     logging.debug("Location Updating Accept")        
     general_info.set_location_update_req_last_seen = False
     if(hasattr(packet, 'gsm_a_tmsi')):
@@ -154,6 +157,18 @@ def handle_gmm_information(packet, score: header_file.score_board, gsm_attachmen
     if(hasattr(packet, 'gsm_a_tmsi')):
         logging.debug("\t TMSI : %s", packet.gsm_a_tmsi)
 
+def handle_identity_request(packet, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check):
+    logging.debug("Identity_Request")
+
+def handle_identity_response(packet, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check):
+    logging.debug("Identity_Response")
+
+def handle_routing_area_update_accept(packet, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check):
+    logging.debug("Routing Area Update Accept")
+
+def handle_routing_area_update_complete(packet, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check):
+    logging.debug("Routing Area Update Complete")
+
 dispatch_gmm_type = {
     header_file.GSM_MSG_GMM_TYPE.ATTACH_REQUEST.value: handle_attach_request,
     header_file.GSM_MSG_GMM_TYPE.ATTACH_COMPLETE.value: handle_attach_complete,
@@ -161,7 +176,11 @@ dispatch_gmm_type = {
     header_file.GSM_MSG_GMM_TYPE.DETACH_REQUEST.value: handle_detach_request,
     header_file.GSM_MSG_GMM_TYPE.AUTHENTICATION_AND_CIPHERING_RESPONSE.value: handle_auth_and_ciphering_response,
     header_file.GSM_MSG_GMM_TYPE.AUTHENTICATION_AND_CIPHERING_REQUEST.value: handle_auth_and_ciphering_request,
-    header_file.GSM_MSG_GMM_TYPE.GMM_INFROMATION.value: handle_gmm_information
+    header_file.GSM_MSG_GMM_TYPE.GMM_INFROMATION.value: handle_gmm_information,
+    header_file.GSM_MSG_GMM_TYPE.IDENTITY_REQUEST.value: handle_identity_request,
+    header_file.GSM_MSG_GMM_TYPE.IDENTITY_RESPONSE.value: handle_identity_response,
+    header_file.GSM_MSG_GMM_TYPE.ROUTING_AREA_UPDATE_ACCEPT.value: handle_routing_area_update_accept,
+    header_file.GSM_MSG_GMM_TYPE.ROUTING_AREA_UPDATE_COMPLETE.value: handle_routing_area_update_complete
 }
 
 #######################
