@@ -1,6 +1,4 @@
-from cmath import nan
 import enum
-from telnetlib import AUTHENTICATION
 
 class FrozenClass(object):
     __isfrozen = False
@@ -113,12 +111,12 @@ class pattern_check(FrozenClass):
             return False
 
 class general_info(FrozenClass):
-    __sip3_last_seen = nan
-    __cell_identity = nan
+    __sip3_last_seen = None
+    __cell_identity = None
     __location_update_request_last_seen = False
-    __imsi = nan
-    __tmsi_mm = nan
-    __tmsi_gmm = nan
+    __imsi = None
+    __tmsi_mm = None
+    __tmsi_gmm = None
     def __init__(self) -> None:
         self._freeze
     
@@ -159,15 +157,15 @@ class general_info(FrozenClass):
         general_info.__tmsi_gmm
 
     def clear_vars(self):
-        general_info.__cell_identity = nan
+        general_info.__cell_identity = None
         general_info.__location_update_request_last_seen = False
-        general_info.__sip3_last_seen = nan
-        general_info.__imsi = nan
-        general_info.__tmsi_gmm = nan
-        general_info.__tmsi_mm = nan
+        general_info.__sip3_last_seen = None
+        general_info.__imsi = None
+        general_info.__tmsi_gmm = None
+        general_info.__tmsi_mm = None
 
 #change to all capital
-class GSM_MSG_MM_TYPE(enum.Enum):
+class MM_TYPE_MSG(enum.Enum):
     IMSI_Detach_Indication = "0x1"
     Location_Updating_Accept = "0x2"
     Location_Updating_Reject = "0x4"
@@ -178,20 +176,20 @@ class GSM_MSG_MM_TYPE(enum.Enum):
     Identify_Response = "0x19"
     MM_Information = "0x32"
 
-class GSM_MSG_GMM_TYPE(enum.Enum):
-    ATTACH_REQUEST = "0x1"
-    ATTACH_ACCEPT = "0x2"
-    ATTACH_COMPLETE = "0x3"
-    DETACH_REQUEST = "0x5"
-    ROUTING_AREA_UPDATE_COMPLETE = "0xa"
-    ROUTING_AREA_UPDATE_ACCEPT = "0x9"
-    AUTHENTICATION_AND_CIPHERING_REQUEST = "0x12"
-    AUTHENTICATION_AND_CIPHERING_RESPONSE = "0x13"
-    IDENTITY_REQUEST = "0x15"
-    IDENTITY_RESPONSE = "0x16"
-    GMM_INFROMATION = "0x21"
+class GMM_TYPE_MSG(enum.Enum):
+    Attach_Request = "0x1"
+    Attach_Accept = "0x2"
+    Attach_Complete = "0x3"
+    Detach_Request = "0x5"
+    Routing_Area_Update_Complete = "0xa"
+    Routing_Area_Update_Accept = "0x9"
+    Authentication_And_Ciphering_Request = "0x12"
+    Authentication_And_Ciphering_Response = "0x13"
+    Identity_Request = "0x15"
+    Identity_Response = "0x16"
+    GMM_Information = "0x21"
 
-class GSM_MSG_RR_TYPE(enum.Enum):
+class RR_TYPE_MSG(enum.Enum):
     System_Information_Type_13 = "0x0"
     System_Information_Type_5ter = "0x6"
     System_Information_Type_2quater = "0x7"
@@ -206,6 +204,7 @@ class GSM_MSG_RR_TYPE(enum.Enum):
     System_Information_Type_6 = "0x1e"
     Paging_Request_Type_1 = "0x21"
     Paging_Request_Type_2 = "0x22"
+    Ciphering_Mode_Complete = "0x32"
     GPRS_Suspension_Request = "0x34"
     Ciphering_Mode_Command = "0x35"
     Immediate_Assignment = "0x3f"
