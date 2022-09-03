@@ -19,6 +19,7 @@ class score_board(FrozenClass):
     __attach_accept = 0
     __attach_complete = 0
     __auth_and_cipher = 0
+    __ciphering_mode_command = 0
     def __init__(self) -> None:
         self._freeze() # no new attributes after this point.
 
@@ -69,11 +70,17 @@ class score_board(FrozenClass):
 
     def get_pattern_points(self):
         return score_board.__pattern_points
+    
+    def set_cipher_mode_command(self, cipher_mode_command):
+        score_board.__ciphering_mode_command = cipher_mode_command
+
+    def get_ciphering_mode_command(self):
+        return score_board.__ciphering_mode_command
 
     def get_overall_score(self):
         return (score_board.__imsi_detach_indication + score_board.__location_update_request + score_board.__authentication_request 
                 + score_board.__pattern_points + score_board.__location_accept + score_board.__attach_accept + score_board.__attach_complete
-                + score_board.__auth_and_cipher)
+                + score_board.__auth_and_cipher + score_board.__ciphering_mode_command)
 
     def clear_points(self):
         score_board.__authentication_request = 0
@@ -84,10 +91,11 @@ class score_board(FrozenClass):
         score_board.__attach_accept = 0
         score_board.__attach_complete = 0
         score_board.__auth_and_cipher = 0
+        score_board.__ciphering_mode_command = 0
 
 class pattern_check(FrozenClass):
     __checker = 0
-    __bit_mask = 31
+    __bit_mask = 127
     def __init__(self) -> None:
         self._freeze
     
@@ -105,7 +113,7 @@ class pattern_check(FrozenClass):
 
     def check_bits(self):
         tmp = pattern_check.__checker & pattern_check.__bit_mask
-        if(tmp == pattern_check.__bit_mask):
+        if(tmp == pattern_check.__checker):
             return True
         else:
             return False
@@ -224,4 +232,5 @@ class SCORE_BOARD(enum.IntEnum):
     Points_Attach_Accept = 10
     Points_GSM_Pattern = 50
     Points_Authentication_And_Ciphering_Request = 10
-    Legit_Operator = 110
+    Points_Ciphering_Mode_Command = 10
+    Legit_Operator = 120
