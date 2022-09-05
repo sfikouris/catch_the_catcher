@@ -140,8 +140,8 @@ class general_info(FrozenClass):
     def get_cell_identity(self):
         return general_info.__cell_identity
 
-    def set_location_update_req_last_seen(self):
-        general_info.__location_update_request_last_seen = True
+    def set_location_update_req_last_seen(self, flag):
+        general_info.__location_update_request_last_seen = flag
     
     def get_location_update_req_last_seen(self):
         return general_info.__location_update_request_last_seen
@@ -182,6 +182,7 @@ class MM_TYPE_MSG(enum.Enum):
     Authentication_Response = "0x14"
     Identify_Request = "0x18"
     Identify_Response = "0x19"
+    CM_SERVICE_REQUEST = "0x24"
     MM_Information = "0x32"
 
 class GMM_TYPE_MSG(enum.Enum):
@@ -233,4 +234,15 @@ class SCORE_BOARD(enum.IntEnum):
     Points_GSM_Pattern = 50
     Points_Authentication_And_Ciphering_Request = 10
     Points_Ciphering_Mode_Command = 10
-    Legit_Operator = 120
+    Legit_Operator = 90
+
+class RRC_MESSAGE(enum.Enum):
+    RRCConnectionRequest = "1"
+    RRCConnectionSetup = "3"
+    DownlinkDirectTransfer = "5"
+    MeasurementReport = "8"
+    RRCConnectionRelease = "15"
+    SecurityModeCommand = "16"
+    RRCConnectionReleaseComplete = "17"
+    RRCConnectionSetupComplete = "18"
+    UplinkDirectTransfer = "27"

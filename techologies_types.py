@@ -6,11 +6,11 @@ logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class techology(object):
     #constructor
-    def __init__(self, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check, 
+    def __init__(self, score: header_file.score_board, attachment_procedure_bits: header_file.pattern_check, 
                     general_info:  header_file.general_info, packet=None):
         self.packet = packet
         self.score = score
-        self.gsm_attachment_procedure_bits = gsm_attachment_procedure_bits
+        self.attachment_procedure_bits = attachment_procedure_bits
         self.general_info = general_info
         self.index = None
         self.dispatch_mm_type = {
@@ -22,7 +22,8 @@ class techology(object):
             header_file.MM_TYPE_MSG.Location_Updating_Reject.value: self.handle_location_update_reject,
             header_file.MM_TYPE_MSG.Authentication_Request.value: self.handle_authentication_request,
             header_file.MM_TYPE_MSG.Authentication_Response.value: self.handle_authetication_response,
-            header_file.MM_TYPE_MSG.MM_Information.value: self.handle_mm_information
+            header_file.MM_TYPE_MSG.MM_Information.value: self.handle_mm_information,
+            header_file.MM_TYPE_MSG.CM_SERVICE_REQUEST.value: self.handle_cm_service_request
         }
 
         self.dispatch_gmm_type = {
@@ -99,6 +100,9 @@ class techology(object):
 
     def handle_mm_information(self):
         logging.debug("MM_Information")
+    
+    def handle_cm_service_request(self):
+        logging.debug("CM_Service_Request")
 
     #######################
     # HANDLE GMM TYPE MSG #
@@ -154,9 +158,9 @@ class techology(object):
     
 class gsm(techology):
         #constructor
-    def __init__(self, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check, 
+    def __init__(self, score: header_file.score_board, attachment_procedure_bits: header_file.pattern_check, 
                     general_info:  header_file.general_info, packet=None):
-        super(gsm, self).__init__(score, gsm_attachment_procedure_bits, general_info, packet)
+        super(gsm, self).__init__(score, attachment_procedure_bits, general_info, packet)
 
     ######################
     # HANDLE MM TYPE MSG #
@@ -165,62 +169,56 @@ class gsm(techology):
     def handle_imsi_detach_indication(self):
         logging.debug("IMSI Detach Indication")
         self.score.clear_points()
-        self.gsm_attachment_procedure_bits.clear_checker()
+        self.attachment_procedure_bits.clear_checker()
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
     
     def handle_identify_request(self):
         logging.debug("Identify Request")
-        self.gsm_attachment_procedure_bits.set_checker(1)
-        #probably need to check about IMSI and IMEI separate 
+        self.attachment_procedure_bits.set_checker(1)
 
     def handle_location_update_request(self):
         logging.debug("Location Updating Request")
-        self.general_info.set_location_upbase_classdate_req_last_seen = True
+        self.general_info.set_location_update_req_last_seen(True)
         retrun_flag = False
-        checker = self.gsm_attachment_procedure_bits.get_checker()
+        checker = self.attachment_procedure_bits.get_checker()
         if(checker == 0):
-            self.gsm_attachment_procedure_bits.set_checker(0)
+            self.attachment_procedure_bits.set_checker(0)
         else:
             current_point = self.score.get_overall_score()
-            retrun_flag = not self.gsm_attachment_procedure_bits.check_bits()
+            retrun_flag = not self.attachment_procedure_bits.check_bits()
             if(retrun_flag):
                 #return if pattern bits are not full.
                 logging.debug("RETURN POINTS : %d", current_point)
                 return current_point
-            self.gsm_attachment_procedure_bits.set_checker(0)
+            self.attachment_procedure_bits.clear_checker() # need to be clear ? 
+            self.attachment_procedure_bits.set_checker(0)
             logging.debug("MAX RETURN POINTS : %d", current_point)
             #no need to return pattern bits because at attachment complete I will do it.
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI Available : %s", self.packet.gsm_a_tmsi)
-            self.score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_TMSI.value)
-            self.general_info.__tmsi_mm = self.packet.gsm_a_tmsi
+            self.general_info.set_tmsi_mm(self.packet.gsm_a_tmsi)
         elif(hasattr(self.packet, 'e212_imsi')):
             logging.debug("\t IMSI Available : %s", self.packet.e212_imsi) #check if field imsi is correct
-            self.score.set_location_update_request(header_file.SCORE_BOARD.Points_Location_Updating_Request_IMSI.value)
-            self.general_info.__imsi = self.packet.e212_imsi
-
-
+            self.general_info.set_imsi(self.packet.e212_imsi)
 
     def handle_location_update_accept(self):
         logging.debug("Location Updating Accept")        
-        self.general_info.set_location_update_req_last_seen = False
+        self.general_info.set_location_update_req_last_seen(False)
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
-        self.gsm_attachment_procedure_bits.set_checker(4)
+        self.attachment_procedure_bits.set_checker(4)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Accept.value)
 
     def handle_location_update_reject(self):
         logging.debug("Location Updating Reject")
-        self.general_info.set_location_update_req_last_seen = False
+        self.general_info.set_location_update_req_last_seen(False)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
         return self.score.get_overall_score()
 
     def handle_authentication_request(self):
         logging.debug("Authentication Request")    
-        if(hasattr(self.packet, 'gsm_a_tmsi')):
-            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
-        self.gsm_attachment_procedure_bits.set_checker(2)
+        self.attachment_procedure_bits.set_checker(2)
         if(self.packet.rand != 0):
             self.score.set_authentication_request(header_file.SCORE_BOARD.Points_Authentication_Request.value)
 
@@ -232,19 +230,15 @@ class gsm(techology):
         logging.debug("Attach_Request")
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
-        self.gsm_attachment_procedure_bits.set_checker(5)
-
-    def handle_attach_complete(self):
-        logging.debug("Attach_Complete")
-        self.score.set_attach_complete(header_file.SCORE_BOARD.Points_Attach_Complete.value)    
+        self.attachment_procedure_bits.set_checker(5)
 
     def handle_attach_accept(self):
         logging.debug("Attach_Accept")
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
-            self.gsm_attachment_procedure_bits.set_checker(6)
+            self.attachment_procedure_bits.set_checker(6)
             self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
-            if self.gsm_attachment_procedure_bits.check_bits():
+            if self.attachment_procedure_bits.check_bits():
                 self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
             return self.score.get_overall_score()       
 
@@ -253,7 +247,7 @@ class gsm(techology):
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
             self.score.clear_points()
-            self.gsm_attachment_procedure_bits.clear_checker()
+            self.attachment_procedure_bits.clear_checker()
 
     def handle_auth_and_ciphering_request(self):
         logging.debug("Authentication_And_Ciphering_Request")
@@ -272,7 +266,7 @@ class gsm(techology):
 
     def handle_ciphering_mode_command(self):
         logging.debug("Ciphering_Mode_Command")
-        self.gsm_attachment_procedure_bits.set_checker(3)
+        self.attachment_procedure_bits.set_checker(3)
         #check if ciphering mode is on
         if(self.packet.gsm_a_rr_SC != 0):
             self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command.value)
@@ -287,7 +281,7 @@ class gsm(techology):
             if self.dispatch_mm_type.__contains__(hex_value_mm):
                 score_points = self.dispatch_mm_type[hex_value_mm]()
                 if(type(score_points) == int):
-                    if(score_points == header_file.SCORE_BOARD.Legit_Operator):
+                    if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
                         logging.info("REAL OPERATOR -> %d", score_points)
                     else:
                         logging.info("IMSI CATCHER -> %d", score_points)  
@@ -300,7 +294,7 @@ class gsm(techology):
                     if self.dispatch_gmm_type.__contains__(hex_value_gmm):
                         score_points = self.dispatch_gmm_type[hex_value_gmm]()
                         if(type(score_points) == int):
-                            if(score_points == header_file.SCORE_BOARD.Legit_Operator):
+                            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
                                 logging.info("REAL OPERATOR -> %d", score_points)
                             else:
                                 logging.info("IMSI CATCHER -> %d", score_points) 
@@ -322,8 +316,153 @@ class gsm(techology):
 
 class umts(techology):
         #constructor
-    def __init__(self, score: header_file.score_board, gsm_attachment_procedure_bits: header_file.pattern_check, 
+    def __init__(self, score: header_file.score_board, attachment_procedure_bits: header_file.pattern_check, 
                     general_info:  header_file.general_info, packet=None):
-        super(umts, self).__init__(score, gsm_attachment_procedure_bits, general_info, packet)
+        super(umts, self).__init__(score, attachment_procedure_bits, general_info, packet)
 
+    #######################
+    #   HANDLER LOGIC     #
+    #######################
+    def handle_packet(self):
+        if(hasattr(self.packet, 'gsm_a_dtap_msg_mm_type')):
+            int_value_mm = int(self.packet.gsm_a_dtap_msg_mm_type, 16)
+            hex_value_mm = hex(int_value_mm)
+            if self.dispatch_mm_type.__contains__(hex_value_mm):
+                score_points = self.dispatch_mm_type[hex_value_mm]()
+                if(type(score_points) == int):
+                    if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
+                        logging.info("REAL OPERATOR -> %d", score_points)
+                    else:
+                        logging.info("IMSI CATCHER -> %d", score_points)  
+            else:
+                logging.debug("Unknown mm type %s", self.packet.gsm_a_dtap_msg_mm_type)
+                print("INT :", int_value_mm, "HEX:",hex_value_mm)
+                logging.debug(self.packet)
+        elif(hasattr(self.packet, 'gsm_a_dtap_msg_gmm_type')):
+                    int_value_gmm = int(self.packet.gsm_a_dtap_msg_gmm_type) #check if 16 needed or why is not needed
+                    hex_value_gmm = hex(int_value_gmm)
+                    if self.dispatch_gmm_type.__contains__(hex_value_gmm):
+                        score_points = self.dispatch_gmm_type[hex_value_gmm]()
+                        if(type(score_points) == int):
+                            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
+                                logging.info("REAL OPERATOR -> %d", score_points)
+                            else:
+                                logging.info("IMSI CATCHER -> %d", score_points) 
+                    else:
+                        logging.debug("Unknown gmm type %s", self.packet.gsm_a_dtap_msg_gmm_type)
+                        logging.debug(self.packet)
+
+        elif(hasattr(self.packet, 'gsm_a_dtap_msg_rr_type')):
+            int_value_rr = int(self.packet.gsm_a_dtap_msg_rr_type, 16)
+            hex_value_rr = hex(int_value_rr)
+            if self.dispatch_rr_type.__contains__(hex_value_rr):
+                self.dispatch_rr_type[hex_value_rr]()
+            else:
+                logging.debug("Unknown rr type %s", self.packet.gsm_a_dtap_msg_rr_type)
+                logging.debug(self.packet)
+
+        elif(hasattr(self.packet, 'rrc_message')):
+            if(self.packet.rrc_message == header_file.RRC_MESSAGE.SecurityModeCommand.value):
+                self.security_mode_command()
+        else:
+            logging.debug("Unknown msg type")
+
+    ######################
+    # HANDLE MM TYPE MSG #
+    ######################
     
+    def handle_location_update_request(self):
+        logging.debug("Location Updating Request")
+        self.general_info.set_location_update_req_last_seen(True)
+        retrun_flag = False
+        checker = self.attachment_procedure_bits.get_checker()
+        if(checker == 0):
+            self.attachment_procedure_bits.set_checker(0)
+        else:
+            current_point = self.score.get_overall_score()
+            retrun_flag = not self.attachment_procedure_bits.check_bits()
+            if(retrun_flag):
+                #return if pattern bits are not full.
+                logging.debug("RETURN POINTS : %d", current_point)
+                return current_point
+            self.attachment_procedure_bits.clear_checker() # need to be clear ? 
+            self.attachment_procedure_bits.set_checker(0)
+            logging.debug("MAX RETURN POINTS : %d", current_point)
+            #no need to return pattern bits because at attachment complete I will do it.
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI Available : %s", self.packet.gsm_a_tmsi)
+            self.general_info.set_tmsi_mm(self.packet.gsm_a_tmsi)
+        elif(hasattr(self.packet, 'e212_imsi')):
+            logging.debug("\t IMSI Available : %s", self.packet.e212_imsi) #check if field imsi is correct
+            self.general_info.set_imsi(self.packet.e212_imsi)
+
+    def handle_authentication_request(self):
+        logging.debug("Authentication Request")    
+        self.attachment_procedure_bits.set_checker(2)
+        if(self.packet.gsm_a_dtap_rand != 0):
+            self.score.set_authentication_request(header_file.SCORE_BOARD.Points_Authentication_Request.value)
+
+    def handle_identify_request(self):
+        logging.debug("Identify Request")
+        self.attachment_procedure_bits.set_checker(4)
+
+    def handle_location_update_accept(self):
+        logging.debug("Location Updating Accept")        
+        self.general_info.set_location_update_req_last_seen(False)
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
+        self.attachment_procedure_bits.set_checker(5)
+        self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Accept.value)
+
+    def handle_imsi_detach_indication(self):
+        logging.debug("IMSI Detach Indication")
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker()
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
+
+    def handle_location_update_reject(self):
+        logging.debug("Location Updating Reject")
+        self.general_info.set_location_update_req_last_seen(False)
+        self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
+        return self.score.get_overall_score()
+
+    #######################
+    # HANDLE GMM TYPE MSG #
+    #######################
+
+    def handle_detach_request(self):
+        logging.debug("Detach_Request")
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
+            self.score.clear_points()
+            self.attachment_procedure_bits.clear_checker()
+
+    def handle_attach_request(self):
+        logging.debug("Attach_Request")
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
+        self.attachment_procedure_bits.set_checker(1)
+
+    def handle_attach_accept(self):
+        logging.debug("Attach_Accept")
+        if(hasattr(self.packet, 'gsm_a_tmsi')):
+            logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)   
+            self.attachment_procedure_bits.set_checker(6)
+            self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
+            if self.attachment_procedure_bits.check_bits():
+                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
+            return self.score.get_overall_score()   
+
+    def handle_auth_and_ciphering_request(self):
+        logging.debug("Authentication_And_Ciphering_Request")
+        if(self.packet.gsm_a_gm_gmm_type_of_ciph_alg != 0):
+            self.score.set_auth_and_cipher(header_file.SCORE_BOARD.Points_Authentication_And_Ciphering_Request.value)
+
+#TODO sip3 cell id etc
+
+    def security_mode_command(self):
+        logging.debug("Security Mode Command")
+        self.attachment_procedure_bits.set_checker(3)
+        if(self.packet.rrc_startRestart != 0):
+            self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command.value)
