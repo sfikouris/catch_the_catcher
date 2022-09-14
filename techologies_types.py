@@ -2,7 +2,7 @@ import header_file
 import logging
 import sys
 
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
 class techology(object):
     #constructor
@@ -168,8 +168,10 @@ class gsm(techology):
 
     def handle_imsi_detach_indication(self):
         logging.debug("IMSI Detach Indication")
+        logging.info("IMSI Detach Indication")
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker()
+        logging.info("Clear points/checkr")
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
     
@@ -180,27 +182,23 @@ class gsm(techology):
     def handle_location_update_request(self):
         logging.debug("Location Updating Request")
         self.general_info.set_location_update_req_last_seen(True)
-        retrun_flag = False
         checker = self.attachment_procedure_bits.get_checker()
-        if(checker == 0):
-            self.attachment_procedure_bits.set_checker(0)
-        else:
-            current_point = self.score.get_overall_score()
-            retrun_flag = not self.attachment_procedure_bits.check_bits()
-            if(retrun_flag):
-                #return if pattern bits are not full.
-                logging.debug("RETURN POINTS : %d", current_point)
-                return current_point
+        logging.info("Checker : %d", checker)
+        current_point = self.score.get_overall_score()
+
+        if(checker != 0):
             self.attachment_procedure_bits.clear_checker() # need to be clear ? 
-            self.attachment_procedure_bits.set_checker(0)
-            logging.debug("MAX RETURN POINTS : %d", current_point)
-            #no need to return pattern bits because at attachment complete I will do it.
+            self.score.clear_points()
+
+        self.attachment_procedure_bits.set_checker(0)
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI Available : %s", self.packet.gsm_a_tmsi)
             self.general_info.set_tmsi_mm(self.packet.gsm_a_tmsi)
         elif(hasattr(self.packet, 'e212_imsi')):
             logging.debug("\t IMSI Available : %s", self.packet.e212_imsi) #check if field imsi is correct
             self.general_info.set_imsi(self.packet.e212_imsi)
+        if(current_point != 0):
+            return current_point        
 
     def handle_location_update_accept(self):
         logging.debug("Location Updating Accept")        
@@ -214,7 +212,10 @@ class gsm(techology):
         logging.debug("Location Updating Reject")
         self.general_info.set_location_update_req_last_seen(False)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
-        return self.score.get_overall_score()
+        overall_score = self.score.get_overall_score()
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker() 
+        return overall_score
 
     def handle_authentication_request(self):
         logging.debug("Authentication Request")    
@@ -239,9 +240,12 @@ class gsm(techology):
             self.attachment_procedure_bits.set_checker(6)
             self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
             if self.attachment_procedure_bits.check_bits():
-                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
-            return self.score.get_overall_score()       
-
+                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)        
+            overall_score = self.score.get_overall_score() 
+            self.score.clear_points()
+            self.attachment_procedure_bits.clear_checker()
+            return overall_score
+    
     def handle_detach_request(self):
         logging.debug("Detach_Request")
         if(hasattr(self.packet, 'gsm_a_tmsi')):
@@ -271,6 +275,7 @@ class gsm(techology):
         if(self.packet.gsm_a_rr_SC != 0):
             self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command.value)
 
+
     #######################
     #   HANDLER LOGIC     #
     #######################
@@ -280,11 +285,7 @@ class gsm(techology):
             hex_value_mm = hex(int_value_mm)
             if self.dispatch_mm_type.__contains__(hex_value_mm):
                 score_points = self.dispatch_mm_type[hex_value_mm]()
-                if(type(score_points) == int):
-                    if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
-                        logging.info("REAL OPERATOR -> %d", score_points)
-                    else:
-                        logging.info("IMSI CATCHER -> %d", score_points)  
+                self.handle_result(score_points)
             else:
                 logging.debug("Unknown mm type %s", self.packet.msg_mm_type)
                 logging.debug(self.packet)
@@ -293,11 +294,7 @@ class gsm(techology):
                     hex_value_gmm = hex(int_value_gmm)
                     if self.dispatch_gmm_type.__contains__(hex_value_gmm):
                         score_points = self.dispatch_gmm_type[hex_value_gmm]()
-                        if(type(score_points) == int):
-                            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
-                                logging.info("REAL OPERATOR -> %d", score_points)
-                            else:
-                                logging.info("IMSI CATCHER -> %d", score_points) 
+                        self.handle_result(score_points)
                     else:
                         logging.debug("Unknown gmm type %s", self.packet.msg_gmm_type)
                         logging.debug(self.packet)
@@ -313,6 +310,13 @@ class gsm(techology):
 
         else:
             logging.debug("Unknown msg type")
+
+    def handle_result(self,score_points):
+        if(type(score_points) == int):
+            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
+                logging.info("REAL OPERATOR -> %d", score_points)
+            else:
+                logging.info("IMSI CATCHER -> %d", score_points) 
 
 class umts(techology):
         #constructor
