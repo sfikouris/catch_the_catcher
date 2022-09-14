@@ -10,12 +10,12 @@ general_info = header_file.general_info()
 '''GSM TESTING'''
 gsm_cap = pyshark.FileCapture('pcaps/gsm_multiple_attach_detach_request.pcapng', display_filter='gsm_a.dtap')
 #Read techology
-# packet = gsm_cap[328]["gsm_a.dtap"]
+packet = gsm_cap[0]
 
-# print(dir(packet))
-# print(packet._all_fields)
-# print(packet.gsm_a_gm_gmm_type_of_ciph_alg)
-
+print(dir(packet))
+#print(packet._all_fields)
+#print(packet.gsm_a_gm_gmm_type_of_ciph_alg)
+print(packet)
 # gsm_cap = pyshark.FileCapture('pcaps/gsm_multiple_attach_detach_request.pcapng', display_filter='gsm_a.dtap')
 # gsm = techologies_types.gsm(score, attachment_procedure_bits, general_info)
 # for index, packet in enumerate(gsm_cap):
