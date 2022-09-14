@@ -125,9 +125,16 @@ class general_info(FrozenClass):
     __imsi = None
     __tmsi_mm = None
     __tmsi_gmm = None
+    __imsi_catched = False
     def __init__(self) -> None:
         self._freeze
     
+    def set_imsi_catched(self, catch):
+        general_info.__imsi_catched = catch
+
+    def get_imsi_catched(self):
+        return general_info.__imsi_catched
+
     def set_sip3_last_seen(self, sip3_packet_num):
         general_info.__sip3_last_seen = sip3_packet_num
     
@@ -171,6 +178,7 @@ class general_info(FrozenClass):
         general_info.__imsi = None
         general_info.__tmsi_gmm = None
         general_info.__tmsi_mm = None
+        general_info.__imsi_catched = False
 
 #change to all capital
 class MM_TYPE_MSG(enum.Enum):
