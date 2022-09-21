@@ -37,6 +37,10 @@ if technology == "gsm":
         gsm.set_packet(packet)
         gsm.set_index(index)
         gsm.handle_packet()
+        if(general_info.get_imsi_catched()):
+            print("IMSI CATCHER IN PARSER")
+            print("cell id of rogue cell : ", general_info.get_cell_identity())
+            general_info.set_imsi_catched(False)
 elif technology == "umts":
     umts_cap = pyshark.FileCapture('pcaps/umts_attach_real_oper.pcapng', display_filter='gsm_a.dtap')
     #umts_cap = pyshark.FileCapture('pcaps/umts_imsi_catcher.pcapng', display_filter='gsm_a.dtap')
