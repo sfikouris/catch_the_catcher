@@ -121,11 +121,12 @@ class pattern_check(FrozenClass):
 class general_info(FrozenClass):
     __sip3_last_seen = None
     __cell_identity = None
-    __location_update_request_last_seen = False
+    __location_update_request_last_seen = None
     __imsi = None
     __tmsi_mm = None
     __tmsi_gmm = None
     __imsi_catched = False
+    __cell_id_on_attach = 0
     def __init__(self) -> None:
         self._freeze
     
@@ -134,6 +135,12 @@ class general_info(FrozenClass):
 
     def get_imsi_catched(self):
         return general_info.__imsi_catched
+
+    def set_cell_id_on_attach(self, id):
+        general_info.__cell_id_on_attach = id
+
+    def get_cell_id_on_attach(self):
+        return general_info.__cell_id_on_attach
 
     def set_sip3_last_seen(self, sip3_packet_num):
         general_info.__sip3_last_seen = sip3_packet_num
@@ -173,7 +180,7 @@ class general_info(FrozenClass):
 
     def clear_vars(self):
         general_info.__cell_identity = None
-        general_info.__location_update_request_last_seen = False
+        general_info.__location_update_request_last_seen = None
         general_info.__sip3_last_seen = None
         general_info.__imsi = None
         general_info.__tmsi_gmm = None
