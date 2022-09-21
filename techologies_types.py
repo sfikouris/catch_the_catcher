@@ -1,3 +1,5 @@
+from cmath import log
+from operator import index
 import header_file
 import logging
 import sys
@@ -168,10 +170,9 @@ class gsm(techology):
 
     def handle_imsi_detach_indication(self):
         logging.debug("IMSI Detach Indication")
-        logging.info("IMSI Detach Indication")
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker()
-        logging.info("Clear points/checkr")
+        self.general_info.clear_vars()
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
     
@@ -183,7 +184,6 @@ class gsm(techology):
         logging.debug("Location Updating Request")
         self.general_info.set_location_update_req_last_seen(True)
         checker = self.attachment_procedure_bits.get_checker()
-        logging.info("Checker : %d", checker)
         current_point = self.score.get_overall_score()
 
         if(checker != 0):
@@ -198,6 +198,8 @@ class gsm(techology):
             logging.debug("\t IMSI Available : %s", self.packet.e212_imsi) #check if field imsi is correct
             self.general_info.set_imsi(self.packet.e212_imsi)
         if(current_point != 0):
+            #self.attachment_procedure_bits.clear_checker()  not sure here how it come in this state
+            logging.INFO("WTF!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             return current_point        
 
     def handle_location_update_accept(self):
@@ -207,6 +209,8 @@ class gsm(techology):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
         self.attachment_procedure_bits.set_checker(4)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Accept.value)
+        self.general_info.set_location_update_req_last_seen(None)
+
 
     def handle_location_update_reject(self):
         logging.debug("Location Updating Reject")
@@ -215,6 +219,7 @@ class gsm(techology):
         overall_score = self.score.get_overall_score()
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker() 
+        self.general_info.set_location_update_req_last_seen(None)
         return overall_score
 
     def handle_authentication_request(self):
@@ -244,6 +249,8 @@ class gsm(techology):
             overall_score = self.score.get_overall_score() 
             self.score.clear_points()
             self.attachment_procedure_bits.clear_checker()
+            self.general_info.set_cell_id_on_attach(self.general_info.get_cell_identity())
+            self.general_info.clear_vars()
             return overall_score
     
     def handle_detach_request(self):
@@ -264,7 +271,8 @@ class gsm(techology):
 
     def handle_system_information_type_3(self):
         logging.debug("System_Information_Type 3")
-        if(self.general_info.get_location_update_req_last_seen == None):
+        if(self.general_info.get_location_update_req_last_seen() == None):
+            #print(self.index)
             self.general_info.set_sip3_last_seen(self.index)
             self.general_info.set_cell_identity(self.packet.gsm_a_bssmap_cell_ci)
 
@@ -311,12 +319,15 @@ class gsm(techology):
         else:
             logging.debug("Unknown msg type")
 
-    def handle_result(self,score_points):
+    def handle_result(self, score_points):
         if(type(score_points) == int):
             if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
                 logging.info("REAL OPERATOR -> %d", score_points)
+                logging.info("At Cell ID -> %s", self.general_info.get_cell_id_on_attach() )
+                self.general_info.set_imsi_catched(False)
             else:
                 logging.info("IMSI CATCHER -> %d", score_points) 
+                self.general_info.set_imsi_catched(True)
 
 class umts(techology):
         #constructor
@@ -385,14 +396,15 @@ class umts(techology):
         else:
             current_point = self.score.get_overall_score()
             retrun_flag = not self.attachment_procedure_bits.check_bits()
-            if(retrun_flag):
+            if(retrun_flag): #not working as it is. TODO fix
                 #return if pattern bits are not full.
-                logging.debug("RETURN POINTS : %d", current_point)
+                #logging.debug("RETURN POINTS : %d", current_point)
+                logging.info("RETURN POINTS : %d", current_point)
                 return current_point
             self.attachment_procedure_bits.clear_checker() # need to be clear ? 
             self.attachment_procedure_bits.set_checker(0)
             logging.debug("MAX RETURN POINTS : %d", current_point)
-            #no need to return pattern bits because at attachment complete I will do it.
+            #no need to return pattern bits because at attachment complete will do it.
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI Available : %s", self.packet.gsm_a_tmsi)
             self.general_info.set_tmsi_mm(self.packet.gsm_a_tmsi)
