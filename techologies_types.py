@@ -344,11 +344,7 @@ class umts(techology):
             hex_value_mm = hex(int_value_mm)
             if self.dispatch_mm_type.__contains__(hex_value_mm):
                 score_points = self.dispatch_mm_type[hex_value_mm]()
-                if(type(score_points) == int):
-                    if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
-                        logging.info("REAL OPERATOR -> %d", score_points)
-                    else:
-                        logging.info("IMSI CATCHER -> %d", score_points)  
+                self.handle_result(score_points) 
             else:
                 logging.debug("Unknown mm type %s", self.packet.gsm_a_dtap_msg_mm_type)
                 print("INT :", int_value_mm, "HEX:",hex_value_mm)
@@ -358,11 +354,7 @@ class umts(techology):
                     hex_value_gmm = hex(int_value_gmm)
                     if self.dispatch_gmm_type.__contains__(hex_value_gmm):
                         score_points = self.dispatch_gmm_type[hex_value_gmm]()
-                        if(type(score_points) == int):
-                            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
-                                logging.info("REAL OPERATOR -> %d", score_points)
-                            else:
-                                logging.info("IMSI CATCHER -> %d", score_points) 
+                        self.handle_result(score_points)
                     else:
                         logging.debug("Unknown gmm type %s", self.packet.gsm_a_dtap_msg_gmm_type)
                         logging.debug(self.packet)
@@ -382,6 +374,13 @@ class umts(techology):
         else:
             logging.debug("Unknown msg type")
 
+    def handle_result(self, score_points):
+        if(type(score_points) == int):
+            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
+                logging.info("REAL OPERATOR -> %d", score_points)
+            else:
+                logging.info("IMSI CATCHER -> %d", score_points) 
+
     ######################
     # HANDLE MM TYPE MSG #
     ######################
@@ -389,28 +388,24 @@ class umts(techology):
     def handle_location_update_request(self):
         logging.debug("Location Updating Request")
         self.general_info.set_location_update_req_last_seen(True)
-        retrun_flag = False
         checker = self.attachment_procedure_bits.get_checker()
-        if(checker == 0):
-            self.attachment_procedure_bits.set_checker(0)
-        else:
-            current_point = self.score.get_overall_score()
-            retrun_flag = not self.attachment_procedure_bits.check_bits()
-            if(retrun_flag): #not working as it is. TODO fix
-                #return if pattern bits are not full.
-                #logging.debug("RETURN POINTS : %d", current_point)
-                logging.info("RETURN POINTS : %d", current_point)
-                return current_point
+        current_point = self.score.get_overall_score()
+
+        if(checker != 0):
             self.attachment_procedure_bits.clear_checker() # need to be clear ? 
-            self.attachment_procedure_bits.set_checker(0)
-            logging.debug("MAX RETURN POINTS : %d", current_point)
-            #no need to return pattern bits because at attachment complete will do it.
+            self.score.clear_points()
+
+        self.attachment_procedure_bits.set_checker(0)
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI Available : %s", self.packet.gsm_a_tmsi)
             self.general_info.set_tmsi_mm(self.packet.gsm_a_tmsi)
         elif(hasattr(self.packet, 'e212_imsi')):
             logging.debug("\t IMSI Available : %s", self.packet.e212_imsi) #check if field imsi is correct
             self.general_info.set_imsi(self.packet.e212_imsi)
+        if(current_point != 0):
+            #self.attachment_procedure_bits.clear_checker()  not sure here how it come in this state
+            logging.INFO("WTF!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            return current_point      
 
     def handle_authentication_request(self):
         logging.debug("Authentication Request")    
@@ -429,11 +424,14 @@ class umts(techology):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
         self.attachment_procedure_bits.set_checker(5)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Accept.value)
+        self.general_info.set_location_update_req_last_seen(None)
+
 
     def handle_imsi_detach_indication(self):
         logging.debug("IMSI Detach Indication")
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker()
+        self.general_info.clear_vars()
         if(hasattr(self.packet, 'gsm_a_tmsi')):
             logging.debug("\t TMSI : %s", self.packet.gsm_a_tmsi)
 
@@ -441,6 +439,10 @@ class umts(techology):
         logging.debug("Location Updating Reject")
         self.general_info.set_location_update_req_last_seen(False)
         self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
+        overall_score = self.score.get_overall_score()
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker() 
+        self.general_info.set_location_update_req_last_seen(None)
         return self.score.get_overall_score()
 
     #######################
@@ -468,7 +470,12 @@ class umts(techology):
             self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
             if self.attachment_procedure_bits.check_bits():
                 self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
-            return self.score.get_overall_score()   
+            overall_score = self.score.get_overall_score() 
+            self.score.clear_points()
+            self.attachment_procedure_bits.clear_checker()
+            self.general_info.set_cell_id_on_attach(self.general_info.get_cell_identity())
+            self.general_info.clear_vars()
+            return overall_score   
 
     def handle_auth_and_ciphering_request(self):
         logging.debug("Authentication_And_Ciphering_Request")
@@ -476,7 +483,13 @@ class umts(techology):
             self.score.set_auth_and_cipher(header_file.SCORE_BOARD.Points_Authentication_And_Ciphering_Request.value)
 
 #TODO sip3 cell id etc
-
+    def handle_system_information_type_3(self):
+        logging.debug("System_Information_Type 3")
+        if(self.general_info.get_location_update_req_last_seen() == None):
+            #print(self.index)
+            self.general_info.set_sip3_last_seen(self.index)
+            self.general_info.set_cell_identity(self.packet.gsm_a_bssmap_cell_ci)
+            
     def security_mode_command(self):
         logging.debug("Security Mode Command")
         self.attachment_procedure_bits.set_checker(3)
