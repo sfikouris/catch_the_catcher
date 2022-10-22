@@ -1,5 +1,7 @@
 import enum
 
+from sqlalchemy import false, true
+
 class FrozenClass(object):
     __isfrozen = False
     def __setattr__(self, key, value):
@@ -20,6 +22,10 @@ class score_board(FrozenClass):
     __attach_complete = 0
     __auth_and_cipher = 0
     __ciphering_mode_command = 0
+    __rrc_connection_request = 0
+    __rrc_connection_setup = 0
+    __rrc_security_mode_command = 0 
+    __rrc_connection_reconfiguration = 0
     def __init__(self) -> None:
         self._freeze() # no new attributes after this point.
 
@@ -76,11 +82,36 @@ class score_board(FrozenClass):
 
     def get_ciphering_mode_command(self):
         return score_board.__ciphering_mode_command
+    
+    def set_rrc_connection_request(self, rrc_connection_request):
+        score_board.__rrc_connection_setup = rrc_connection_request
+
+    def get_rrc_connection_request(self):
+        return score_board.__rrc_connection_request
+    
+    def set_rrc_connection_setup(self, rrc_coonection_setup):
+        score_board.__rrc_connection_setup = rrc_coonection_setup
+    
+    def get_rrc_coonection_setup(self):
+        return score_board.__rrc_connection_setup
+
+    def set_rrc_security_mode_command(self, rrc_security_mode_command):
+        score_board.__rrc_security_mode_command = rrc_security_mode_command
+
+    def get_rrc_security_mode_command(self):
+        return score_board.__rrc_security_mode_command    
+
+    def set_rrc_connection_reconfiguration(self, rrc_connection_reconfiguration):
+        score_board.__rrc_connection_reconfiguration = rrc_connection_reconfiguration
+    
+    def get_rrc_coonection_reconfiguration(self):
+        return score_board.__rrc_connection_reconfiguration
 
     def get_overall_score(self):
         return (score_board.__imsi_detach_indication + score_board.__location_update_request + score_board.__authentication_request 
                 + score_board.__pattern_points + score_board.__location_accept + score_board.__attach_accept + score_board.__attach_complete
-                + score_board.__auth_and_cipher + score_board.__ciphering_mode_command)
+                + score_board.__auth_and_cipher + score_board.__ciphering_mode_command + score_board.__rrc_connection_reconfiguration 
+                + score_board.__rrc_connection_request + score_board.__rrc_connection_setup + score_board.__rrc_security_mode_command)
 
     def clear_points(self):
         score_board.__authentication_request = 0
@@ -92,10 +123,15 @@ class score_board(FrozenClass):
         score_board.__attach_complete = 0
         score_board.__auth_and_cipher = 0
         score_board.__ciphering_mode_command = 0
+        score_board.__rrc_security_mode_command = 0
+        score_board.__rrc_connection_reconfiguration = 0
+        score_board.__rrc_connection_request = 0
+        score_board.__rrc_connection_setup = 0
 
 class pattern_check(FrozenClass):
     __checker = 0
     __bit_mask = 127
+    __bit_mask_lte = 99
     def __init__(self) -> None:
         self._freeze
     
@@ -117,6 +153,13 @@ class pattern_check(FrozenClass):
             return True
         else:
             return False
+
+    def check_bits_lte(self):
+        tmp = pattern_check.__checker & pattern_check.__bit_mask_lte
+        if(pattern_check.__checker == pattern_check.__bit_mask_lte):
+            return true
+        else:
+            return false
 
 class general_info(FrozenClass):
     __sip3_last_seen = None
@@ -233,6 +276,25 @@ class RR_TYPE_MSG(enum.Enum):
     Ciphering_Mode_Command = "0x35"
     Immediate_Assignment = "0x3f"
 
+class RRC_MESSAGE(enum.Enum):
+    RRCConnectionRequest = "1"
+    RRCConnectionSetup = "3"
+    RRCConnectionReconfiguration = "4"
+    RRCConnectionReleaseLte = "5"
+    RRCSecurityModeCommand = "6"
+    RRCUeCapabilityEnquiry = "7"
+    #MeasurementReport = "8" todo double check if this is valid
+    RRCConnectionReleaseUmts = "15"
+    RRCConnectionReleaseComplete = "17"
+    RRCConnectionSetupComplete = "18"
+    #UplinkDirectTransfer = "27" todo double check if this is valid
+
+class EMM_TYPE_MSG(enum.Enum):
+    Authentication_Request = "0x52"
+    Security_Mode_Command = "0x5d"
+    Identity_Request = "0x55"
+    Tracking_Area_Update_Reject = "0x4b"
+
 class SCORE_BOARD(enum.IntEnum):
     Points_IMSI_Detach_Indication_TMSI = 10
     Points_IMSI_Detach_Indication_IMSI = -10
@@ -246,18 +308,11 @@ class SCORE_BOARD(enum.IntEnum):
     Points_Authentication_Request_not_asking = -10 #check if it's asking (imsi catcher)
     Points_Attach_Complete = 10
     Points_Attach_Accept = 10
-    Points_GSM_Pattern = 50
+    Points_Pattern = 50
     Points_Authentication_And_Ciphering_Request = 10
     Points_Ciphering_Mode_Command = 10
+    Points_RRC_Connection_Request = 10
+    Points_RRC_Connection_Setup = 10
+    Points_RRC_Security_Mode_Command = 10
+    Points_RRC_Connection_Reconfguration = 10
     Legit_Operator = 90
-
-class RRC_MESSAGE(enum.Enum):
-    RRCConnectionRequest = "1"
-    RRCConnectionSetup = "3"
-    DownlinkDirectTransfer = "5"
-    MeasurementReport = "8"
-    RRCConnectionRelease = "15"
-    SecurityModeCommand = "16"
-    RRCConnectionReleaseComplete = "17"
-    RRCConnectionSetupComplete = "18"
-    UplinkDirectTransfer = "27"

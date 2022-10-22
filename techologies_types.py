@@ -4,7 +4,7 @@ import header_file
 import logging
 import sys
 
-logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 class techology(object):
     #constructor
@@ -16,51 +16,70 @@ class techology(object):
         self.general_info = general_info
         self.index = None
         self.dispatch_mm_type = {
-            header_file.MM_TYPE_MSG.IMSI_Detach_Indication.value: self.handle_imsi_detach_indication,
-            header_file.MM_TYPE_MSG.Identify_Request.value: self.handle_identify_request,
-            header_file.MM_TYPE_MSG.Identify_Response.value: self.handle_identify_response,
-            header_file.MM_TYPE_MSG.Location_Updating_Request.value: self.handle_location_update_request,
-            header_file.MM_TYPE_MSG.Location_Updating_Accept.value: self.handle_location_update_accept,
-            header_file.MM_TYPE_MSG.Location_Updating_Reject.value: self.handle_location_update_reject,
-            header_file.MM_TYPE_MSG.Authentication_Request.value: self.handle_authentication_request,
-            header_file.MM_TYPE_MSG.Authentication_Response.value: self.handle_authetication_response,
-            header_file.MM_TYPE_MSG.MM_Information.value: self.handle_mm_information,
-            header_file.MM_TYPE_MSG.CM_SERVICE_REQUEST.value: self.handle_cm_service_request
+            header_file.MM_TYPE_MSG.IMSI_Detach_Indication.value : self.handle_imsi_detach_indication,
+            header_file.MM_TYPE_MSG.Identify_Request.value : self.handle_identify_request,
+            header_file.MM_TYPE_MSG.Identify_Response.value : self.handle_identify_response,
+            header_file.MM_TYPE_MSG.Location_Updating_Request.value : self.handle_location_update_request,
+            header_file.MM_TYPE_MSG.Location_Updating_Accept.value : self.handle_location_update_accept,
+            header_file.MM_TYPE_MSG.Location_Updating_Reject.value : self.handle_location_update_reject,
+            header_file.MM_TYPE_MSG.Authentication_Request.value : self.handle_authentication_request,
+            header_file.MM_TYPE_MSG.Authentication_Response.value : self.handle_authetication_response,
+            header_file.MM_TYPE_MSG.MM_Information.value : self.handle_mm_information,
+            header_file.MM_TYPE_MSG.CM_SERVICE_REQUEST.value : self.handle_cm_service_request
         }
 
         self.dispatch_gmm_type = {
-            header_file.GMM_TYPE_MSG.Attach_Request.value: self.handle_attach_request,
-            header_file.GMM_TYPE_MSG.Attach_Complete.value: self.handle_attach_complete,
-            header_file.GMM_TYPE_MSG.Attach_Accept.value: self.handle_attach_accept,
-            header_file.GMM_TYPE_MSG.Detach_Request.value: self.handle_detach_request,
-            header_file.GMM_TYPE_MSG.Authentication_And_Ciphering_Response.value: self.handle_auth_and_ciphering_response,
-            header_file.GMM_TYPE_MSG.Authentication_And_Ciphering_Request.value: self.handle_auth_and_ciphering_request,
-            header_file.GMM_TYPE_MSG.GMM_Information.value: self.handle_gmm_information,
-            header_file.GMM_TYPE_MSG.Identity_Request.value: self.handle_identity_request,
-            header_file.GMM_TYPE_MSG.Identity_Response.value: self.handle_identity_response,
-            header_file.GMM_TYPE_MSG.Routing_Area_Update_Accept.value: self.handle_routing_area_update_accept,
-            header_file.GMM_TYPE_MSG.Routing_Area_Update_Complete.value: self.handle_routing_area_update_complete
+            header_file.GMM_TYPE_MSG.Attach_Request.value : self.handle_attach_request,
+            header_file.GMM_TYPE_MSG.Attach_Complete.value : self.handle_attach_complete,
+            header_file.GMM_TYPE_MSG.Attach_Accept.value : self.handle_attach_accept,
+            header_file.GMM_TYPE_MSG.Detach_Request.value : self.handle_detach_request,
+            header_file.GMM_TYPE_MSG.Authentication_And_Ciphering_Response.value : self.handle_auth_and_ciphering_response,
+            header_file.GMM_TYPE_MSG.Authentication_And_Ciphering_Request.value : self.handle_auth_and_ciphering_request,
+            header_file.GMM_TYPE_MSG.GMM_Information.value : self.handle_gmm_information,
+            header_file.GMM_TYPE_MSG.Identity_Request.value : self.handle_identity_request,
+            header_file.GMM_TYPE_MSG.Identity_Response.value : self.handle_identity_response,
+            header_file.GMM_TYPE_MSG.Routing_Area_Update_Accept.value : self.handle_routing_area_update_accept,
+            header_file.GMM_TYPE_MSG.Routing_Area_Update_Complete.value : self.handle_routing_area_update_complete
         }
 
         self.dispatch_rr_type = {
-            header_file.RR_TYPE_MSG.System_Information_Type_3.value: self.handle_system_information_type_3,
-            header_file.RR_TYPE_MSG.System_Information_Type_13.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_5ter.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_2quater.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Channel_Release.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Measurement_Report.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Classmark_Change.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_1.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_2.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_4.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_5.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.System_Information_Type_6.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Paging_Request_Type_1.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Paging_Request_Type_2.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.GPRS_Suspension_Request.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Ciphering_Mode_Command.value: self.handle_ciphering_mode_command,
-            header_file.RR_TYPE_MSG.Ciphering_Mode_Complete.value: self.handle_known_rr_msg,
-            header_file.RR_TYPE_MSG.Immediate_Assignment.value: self.handle_known_rr_msg
+            header_file.RR_TYPE_MSG.System_Information_Type_3.value : self.handle_system_information_type_3,
+            header_file.RR_TYPE_MSG.System_Information_Type_13.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_5ter.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_2quater.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Channel_Release.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Measurement_Report.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Classmark_Change.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_1.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_2.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_4.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_5.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.System_Information_Type_6.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Paging_Request_Type_1.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Paging_Request_Type_2.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.GPRS_Suspension_Request.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Ciphering_Mode_Command.value : self.handle_ciphering_mode_command,
+            header_file.RR_TYPE_MSG.Ciphering_Mode_Complete.value : self.handle_known_rr_msg,
+            header_file.RR_TYPE_MSG.Immediate_Assignment.value : self.handle_known_rr_msg
+        }
+
+        self.dispatch_emm_type = {
+            header_file.EMM_TYPE_MSG.Authentication_Request.value : self.handle_authentication_request,
+            header_file.EMM_TYPE_MSG.Identity_Request.value : self.handle_identify_request,
+            header_file.EMM_TYPE_MSG.Security_Mode_Command.value : self.handle_security_mode_command,
+            header_file.EMM_TYPE_MSG.Tracking_Area_Update_Reject.value : self.handle_location_update_reject
+        }
+
+        self.dispatch_rrc_type = {
+            header_file.RRC_MESSAGE.RRCConnectionRequest.value : self.handle_rrc_connection_request,
+            header_file.RRC_MESSAGE.RRCConnectionReconfiguration.value : self.handle_rrc_connection_reconfiguration,
+            header_file.RRC_MESSAGE.RRCConnectionReleaseComplete.value : self.handle_rrc_connection_release_complete,
+            header_file.RRC_MESSAGE.RRCConnectionReleaseLte.value : self.handle_rrc_connection_release_lte,
+            header_file.RRC_MESSAGE.RRCConnectionReleaseUmts.value : self.handle_rrc_connection_release_umts,
+            header_file.RRC_MESSAGE.RRCConnectionSetup.value : self.handle_rrc_connection_setup,
+            header_file.RRC_MESSAGE.RRCConnectionSetupComplete.value : self.handle_rrc_connection_setup_complete,
+            header_file.RRC_MESSAGE.RRCSecurityModeCommand.value : self.handle_rrc_security_mode_command,
+            header_file.RRC_MESSAGE.RRCUeCapabilityEnquiry.value : self.handle_rrc_ue_capability_enquiry
         }
 
     def set_index(self, new_index):
@@ -105,6 +124,10 @@ class techology(object):
     
     def handle_cm_service_request(self):
         logging.debug("CM_Service_Request")
+    
+    def handle_security_mode_command(self):
+        logging.debug("Security_Mode_Command")
+
 
     #######################
     # HANDLE GMM TYPE MSG #
@@ -157,7 +180,40 @@ class techology(object):
         int_value_rr = int(self.packet.msg_rr_type, 16)
         hex_value_rr = hex(int_value_rr)
         logging.debug(header_file.RR_TYPE_MSG(hex_value_rr).name)
+
+    #######################
+    # HANDLE RRC TYPE MSG #
+    #######################
+
+    def handle_rrc_connection_request(self):
+        logging.debug("RRC Connection Request")
     
+    def handle_rrc_connection_setup(self):
+        logging.debug("RRC Connection Setup")
+
+    def handle_rrc_connection_reconfiguration(self):
+        logging.debug("RRC Connection Reconfiguration")
+
+    def handle_rrc_connection_release_lte(self):
+        logging.debug("RRC Connection Release Lte")
+    
+    def handle_rrc_connection_release_umts(self):
+        logging.debug("RRC Connection Release Umts")
+    
+    def handle_rrc_security_mode_command(self):
+        logging.debug("RRC Security Mode Command")
+    
+    def handle_rrc_connection_release_complete(self):
+        logging.debug("RRC Connection Release Complete")
+    
+    def handle_rrc_connection_setup_complete(self):
+        logging.debug("RRC Connection Setup Complete")
+    
+    def handle_rrc_ue_capability_enquiry(self):
+        logging.debug("RRC Ue Capability Enquiry")
+
+
+
 class gsm(techology):
         #constructor
     def __init__(self, score: header_file.score_board, attachment_procedure_bits: header_file.pattern_check, 
@@ -245,7 +301,7 @@ class gsm(techology):
             self.attachment_procedure_bits.set_checker(6)
             self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
             if self.attachment_procedure_bits.check_bits():
-                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)        
+                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_Pattern.value)        
             overall_score = self.score.get_overall_score() 
             self.score.clear_points()
             self.attachment_procedure_bits.clear_checker()
@@ -370,6 +426,7 @@ class umts(techology):
 
         elif(hasattr(self.packet, 'rrc_message')):
             if(self.packet.rrc_message == header_file.RRC_MESSAGE.SecurityModeCommand.value):
+                logging.debug("THIS WILL NEVER RUN BASED ON THE FILTER IN PARSER!!")
                 self.security_mode_command()
         else:
             logging.debug("Unknown msg type")
@@ -443,7 +500,7 @@ class umts(techology):
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker() 
         self.general_info.set_location_update_req_last_seen(None)
-        return self.score.get_overall_score()
+        return overall_score
 
     #######################
     # HANDLE GMM TYPE MSG #
@@ -469,7 +526,7 @@ class umts(techology):
             self.attachment_procedure_bits.set_checker(6)
             self.score.set_attach_accept(header_file.SCORE_BOARD.Points_Attach_Accept.value)
             if self.attachment_procedure_bits.check_bits():
-                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_GSM_Pattern.value)
+                self.score.set_pattern_points(header_file.SCORE_BOARD.Points_Pattern.value)
             overall_score = self.score.get_overall_score() 
             self.score.clear_points()
             self.attachment_procedure_bits.clear_checker()
@@ -495,3 +552,113 @@ class umts(techology):
         self.attachment_procedure_bits.set_checker(3)
         if(self.packet.rrc_startRestart != 0):
             self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command.value)
+
+class lte(techology):
+            #constructor
+    def __init__(self, score: header_file.score_board, attachment_procedure_bits: header_file.pattern_check, 
+                    general_info:  header_file.general_info, packet=None):
+        super(lte, self).__init__(score, attachment_procedure_bits, general_info, packet)
+
+    #######################
+    #   HANDLER LOGIC     #
+    #######################
+
+    def handle_packet(self):
+        if(hasattr(self.packet, 'nas_eps_nas_msg_emm_type')):
+            int_value_emm = int(self.packet.nas_eps_nas_msg_emm_type, 10)
+            hex_value_emm = hex(int_value_emm)
+            if self.dispatch_emm_type.__contains__(hex_value_emm):
+                score_points = self.dispatch_emm_type[hex_value_emm]()
+                self.handle_result(score_points) 
+            else:
+                logging.debug("Unknown emm type %s", self.packet.nas_eps_nas_msg_emm_type)
+                print("INT :", int_value_emm, "HEX:",hex_value_emm)
+                logging.debug(self.packet)
+                
+        elif(hasattr(self.packet, 'lte-rrc_c1')):
+                if(not(hasattr(self.packet, 'lte-rrc.dlInformationTransfer_element'))):
+                    int_value_rrc = self.packet.lte_rrc_c1
+                    if self.dispatch_rrc_type.__contains__(int_value_rrc):
+                        score_points = self.dispatch_rrc_type[int_value_rrc]()
+                        self.handle_result(score_points)
+                    else:
+
+                        logging.debug("Unknown RRC type %s", self.packet.lte_rrc_c1)
+                        logging.debug(self.packet)
+                        exit(0)
+        else:
+            logging.debug("Unknown msg type")
+    
+    def handle_result(self, score_points):
+        if(type(score_points) == int):
+            if(score_points >= header_file.SCORE_BOARD.Legit_Operator):
+                logging.info("REAL OPERATOR -> %d", score_points)
+                self.general_info.set_imsi_catched(False)
+            else:
+                logging.info("IMSI CATCHER -> %d", score_points) 
+                self.general_info.set_imsi_catched(True)
+#####
+#EMM#
+##### 
+    def handle_authentication_request(self):
+        logging.debug("Authendication Request")
+        self.attachment_procedure_bits.set_checker(3)
+        self.score.set_authentication_request(header_file.SCORE_BOARD.Points_Authentication_Request)
+        return
+
+    def handle_identify_request(self):
+        logging.debug("Identify Request")
+        self.attachment_procedure_bits.set_checker(2)
+        return
+
+    def handle_security_mode_command(self):
+        logging.debug("security_mode_command")
+        self.attachment_procedure_bits.set_checker(4)
+        self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command)
+        return
+
+    def handle_location_update_reject(self):
+        logging.debug("Location Updating Reject")
+        self.score.set_location_accept(header_file.SCORE_BOARD.Points_Location_Reject.value)
+        overall_score = self.score.get_overall_score()
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker() 
+        return overall_score
+######
+#RRC#
+######   
+
+    def handle_rrc_connection_request(self):
+        logging.debug("RRC connection request")
+        if(self.attachment_procedure_bits.get_checker()):
+            self.attachment_procedure_bits.clear_checker()
+            self.score.clear_points()
+
+        self.attachment_procedure_bits.set_checker(0)
+
+
+        return
+
+    def handle_rrc_connection_setup(self):
+        logging.debug("RRC connection setup")
+        self.attachment_procedure_bits.set_checker(1)
+        self.score.set_rrc_connection_setup(header_file.SCORE_BOARD.Points_RRC_Connection_Setup)
+        return
+
+    def handle_rrc_security_mode_command(self):
+        logging.debug("RRC security mode command")
+        self.attachment_procedure_bits.set_checker(5)
+        self.score.set_rrc_security_mode_command(header_file.SCORE_BOARD.Points_RRC_Security_Mode_Command)
+        return
+    
+    def handle_rrc_connection_reconfiguration(self):
+        logging.debug("RRC connection reconfiguration")
+        self.attachment_procedure_bits.set_checker(6)
+        self.score.set_rrc_connection_reconfiguration(header_file.SCORE_BOARD.Points_RRC_Connection_Reconfguration)
+        if self.attachment_procedure_bits.check_bits():
+            logging.debug("RRC connection reconfiguration checking about bits")
+            self.score.set_pattern_points(header_file.SCORE_BOARD.Points_Pattern)
+        overall_score = self.score.get_overall_score()
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker()
+        return overall_score  
