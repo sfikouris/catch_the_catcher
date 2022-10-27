@@ -84,7 +84,7 @@ class score_board(FrozenClass):
         return score_board.__ciphering_mode_command
     
     def set_rrc_connection_request(self, rrc_connection_request):
-        score_board.__rrc_connection_setup = rrc_connection_request
+        score_board.__rrc_connection_request = rrc_connection_request
 
     def get_rrc_connection_request(self):
         return score_board.__rrc_connection_request
@@ -92,7 +92,7 @@ class score_board(FrozenClass):
     def set_rrc_connection_setup(self, rrc_coonection_setup):
         score_board.__rrc_connection_setup = rrc_coonection_setup
     
-    def get_rrc_coonection_setup(self):
+    def get_rrc_connection_setup(self):
         return score_board.__rrc_connection_setup
 
     def set_rrc_security_mode_command(self, rrc_security_mode_command):
@@ -131,7 +131,7 @@ class score_board(FrozenClass):
 class pattern_check(FrozenClass):
     __checker = 0
     __bit_mask = 127
-    __bit_mask_lte = 99
+    __bit_mask_lte = 31
     def __init__(self) -> None:
         self._freeze
     
@@ -156,7 +156,7 @@ class pattern_check(FrozenClass):
 
     def check_bits_lte(self):
         tmp = pattern_check.__checker & pattern_check.__bit_mask_lte
-        if(pattern_check.__checker == pattern_check.__bit_mask_lte):
+        if(tmp == pattern_check.__bit_mask_lte):
             return true
         else:
             return false
@@ -170,6 +170,7 @@ class general_info(FrozenClass):
     __tmsi_gmm = None
     __imsi_catched = False
     __cell_id_on_attach = 0
+    __rrc_request = False
     def __init__(self) -> None:
         self._freeze
     
@@ -221,6 +222,12 @@ class general_info(FrozenClass):
     def get_tmsi_gmm(self):
         general_info.__tmsi_gmm
 
+    def set_rrc_request(self, rrc_setup):
+        general_info.__rrc_request = rrc_setup
+    
+    def get_rrc_request(self):
+        return general_info.__rrc_request
+
     def clear_vars(self):
         general_info.__cell_identity = None
         general_info.__location_update_request_last_seen = None
@@ -229,6 +236,7 @@ class general_info(FrozenClass):
         general_info.__tmsi_gmm = None
         general_info.__tmsi_mm = None
         general_info.__imsi_catched = False
+        general_info.__rrc_request = False
 
 #change to all capital
 class MM_TYPE_MSG(enum.Enum):
@@ -283,6 +291,7 @@ class RRC_MESSAGE(enum.Enum):
     RRCConnectionReleaseLte = "5"
     RRCSecurityModeCommand = "6"
     RRCUeCapabilityEnquiry = "7"
+    RRCUeInformationRrequestR9 = "9"
     #MeasurementReport = "8" todo double check if this is valid
     RRCConnectionReleaseUmts = "15"
     RRCConnectionReleaseComplete = "17"

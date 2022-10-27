@@ -1,5 +1,7 @@
 from cmath import log
 from operator import index
+
+from sqlalchemy import true
 import header_file
 import logging
 import sys
@@ -79,7 +81,8 @@ class techology(object):
             header_file.RRC_MESSAGE.RRCConnectionSetup.value : self.handle_rrc_connection_setup,
             header_file.RRC_MESSAGE.RRCConnectionSetupComplete.value : self.handle_rrc_connection_setup_complete,
             header_file.RRC_MESSAGE.RRCSecurityModeCommand.value : self.handle_rrc_security_mode_command,
-            header_file.RRC_MESSAGE.RRCUeCapabilityEnquiry.value : self.handle_rrc_ue_capability_enquiry
+            header_file.RRC_MESSAGE.RRCUeCapabilityEnquiry.value : self.handle_rrc_ue_capability_enquiry,
+            header_file.RRC_MESSAGE.RRCUeInformationRrequestR9.value : self.handle_rrc_ue_information_request_r9
         }
 
     def set_index(self, new_index):
@@ -211,6 +214,9 @@ class techology(object):
     
     def handle_rrc_ue_capability_enquiry(self):
         logging.debug("RRC Ue Capability Enquiry")
+
+    def handle_rrc_ue_information_request_r9(self):
+        logging.debug("RRC UE Information Request R9")
 
 
 
@@ -583,8 +589,9 @@ class lte(techology):
                         self.handle_result(score_points)
                     else:
 
-                        logging.debug("Unknown RRC type %s", self.packet.lte_rrc_c1)
+                        logging.debug("Unknown RRC type %s, %s", self.packet.lte_rrc_c1, int_value_rrc)
                         logging.debug(self.packet)
+                        logging.debug(self.packet._all_fields)
                         exit(0)
         else:
             logging.debug("Unknown msg type")
@@ -615,7 +622,13 @@ class lte(techology):
         logging.debug("security_mode_command")
         self.attachment_procedure_bits.set_checker(4)
         self.score.set_cipher_mode_command(header_file.SCORE_BOARD.Points_Ciphering_Mode_Command)
-        return
+        if self.attachment_procedure_bits.check_bits_lte():
+            self.score.set_pattern_points(header_file.SCORE_BOARD.Points_Pattern)
+        overall_score = self.score.get_overall_score()
+        self.score.clear_points()
+        self.attachment_procedure_bits.clear_checker()
+        self.general_info.clear_vars()
+        return overall_score
 
     def handle_location_update_reject(self):
         logging.debug("Location Updating Reject")
@@ -633,32 +646,33 @@ class lte(techology):
         if(self.attachment_procedure_bits.get_checker()):
             self.attachment_procedure_bits.clear_checker()
             self.score.clear_points()
+        if(not self.general_info.get_rrc_request()):
+            self.general_info.set_rrc_request(True)
 
         self.attachment_procedure_bits.set_checker(0)
-
-
-        return
+        self.score.set_rrc_connection_request(header_file.SCORE_BOARD.Points_RRC_Connection_Request)
 
     def handle_rrc_connection_setup(self):
         logging.debug("RRC connection setup")
         self.attachment_procedure_bits.set_checker(1)
         self.score.set_rrc_connection_setup(header_file.SCORE_BOARD.Points_RRC_Connection_Setup)
-        return
 
     def handle_rrc_security_mode_command(self):
         logging.debug("RRC security mode command")
         self.attachment_procedure_bits.set_checker(5)
         self.score.set_rrc_security_mode_command(header_file.SCORE_BOARD.Points_RRC_Security_Mode_Command)
-        return
     
     def handle_rrc_connection_reconfiguration(self):
         logging.debug("RRC connection reconfiguration")
+        if(not self.general_info.get_rrc_request()):
+            return
+
         self.attachment_procedure_bits.set_checker(6)
         self.score.set_rrc_connection_reconfiguration(header_file.SCORE_BOARD.Points_RRC_Connection_Reconfguration)
         if self.attachment_procedure_bits.check_bits():
-            logging.debug("RRC connection reconfiguration checking about bits")
             self.score.set_pattern_points(header_file.SCORE_BOARD.Points_Pattern)
         overall_score = self.score.get_overall_score()
         self.score.clear_points()
         self.attachment_procedure_bits.clear_checker()
+        self.general_info.clear_vars()
         return overall_score  
